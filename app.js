@@ -8,6 +8,10 @@ const quizSelect = document.getElementById("quiz-select");
 const questionsContainer = document.getElementById("questions");
 const quizMeta = document.getElementById("quiz-meta");
 const statusEl = document.getElementById("status");
+const referencePanel = document.getElementById("reference-panel");
+const answersContent = document.getElementById("answers-content");
+const explanationContent = document.getElementById("explanation-content");
+const showReferenceButton = document.getElementById("show-reference-button");
 const copyButton = document.getElementById("copy-button");
 const clearButton = document.getElementById("clear-button");
 
@@ -36,7 +40,12 @@ function renderQuizOptions() {
 function bindEvents() {
   quizSelect.addEventListener("change", async (event) => {
     currentQuizId = event.target.value;
+    hideReferencePanel();
     await loadAndRenderQuiz(currentQuizId);
+  });
+
+  showReferenceButton.addEventListener("click", async () => {
+    await showReferenceFiles(currentQuizId);
   });
 
   copyButton.addEventListener("click", async () => {
@@ -95,6 +104,38 @@ async function loadAndRenderQuiz(quizId) {
     questionsContainer.innerHTML = `<p>문제를 불러오지 못했습니다: ${error.message}</p>`;
     setStatus("오류가 발생했습니다.");
   }
+}
+
+async function showReferenceFiles(quizId) {
+  setStatus(`${quizId} 답안/설명을 불러오는 중...`);
+  try {
+    const [answersText, explanationText] = await Promise.all([
+      fetchMarkdownText(`./${quizId}/answers.md`, "답안 파일"),
+      fetchMarkdownText(`./${quizId}/explanation.md`, "설명 파일"),
+    ]);
+
+    answersContent.textContent = answersText;
+    explanationContent.textContent = explanationText;
+    referencePanel.classList.remove("hidden");
+    setStatus(`${quizId} 답안/설명 표시 완료`);
+  } catch (error) {
+    hideReferencePanel();
+    setStatus(`답안/설명 표시 실패: ${error.message}`);
+  }
+}
+
+async function fetchMarkdownText(path, label) {
+  const response = await fetch(path);
+  if (!response.ok) {
+    throw new Error(`${label}을 불러오지 못했습니다.`);
+  }
+  return response.text();
+}
+
+function hideReferencePanel() {
+  referencePanel.classList.add("hidden");
+  answersContent.textContent = "";
+  explanationContent.textContent = "";
 }
 
 function parseQuestionsMarkdown(markdown) {

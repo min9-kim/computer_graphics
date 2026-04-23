@@ -27,7 +27,7 @@ body {
 
 .controls {
   display: grid;
-  grid-template-columns: auto minmax(180px, 220px) 1fr 1fr;
+  grid-template-columns: auto minmax(180px, 220px) 1fr 1fr 1fr;
   gap: 10px;
   align-items: center;
   background: #ffffff;
@@ -77,6 +77,42 @@ button:hover {
   border-radius: 10px;
   padding: 12px;
   margin-bottom: 14px;
+}
+
+.reference-panel {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.reference-panel h2 {
+  margin: 0 0 10px;
+  font-size: 1.1rem;
+}
+
+.reference-panel h3 {
+  margin: 10px 0 6px;
+  font-size: 0.98rem;
+  color: #374151;
+}
+
+.reference-content {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px;
+  max-height: 320px;
+  overflow: auto;
+  line-height: 1.45;
+}
+
+.hidden {
+  display: none;
 }
 
 .questions {

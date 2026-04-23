@@ -16,12 +16,20 @@
       <section class="controls">
         <label for="quiz-select">퀴즈 선택</label>
         <select id="quiz-select"></select>
+        <button id="show-reference-button" type="button">답안 + 설명 보기</button>
         <button id="copy-button" type="button">answers.md 형식으로 복사</button>
         <button id="clear-button" type="button">현재 퀴즈 답안 초기화</button>
       </section>
 
       <section id="status" class="status" aria-live="polite"></section>
       <section id="quiz-meta" class="quiz-meta"></section>
+      <section id="reference-panel" class="reference-panel hidden">
+        <h2>모범답안 / 해설</h2>
+        <h3>answers.md</h3>
+        <pre id="answers-content" class="reference-content"></pre>
+        <h3>explanation.md</h3>
+        <pre id="explanation-content" class="reference-content"></pre>
+      </section>
       <section id="questions" class="questions"></section>
     </main>
 
