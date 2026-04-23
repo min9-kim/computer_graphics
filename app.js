@@ -17,6 +17,7 @@ const clearButton = document.getElementById("clear-button");
 
 let currentQuizId = QUIZ_OPTIONS[0].id;
 let currentQuizData = null;
+let gradingCache = {};
 
 init();
 
@@ -212,6 +213,10 @@ function renderQuestions(quizData) {
       </div>
       <div class="question-body">${escapeHtml(body)}</div>
       <textarea placeholder="여기에 답안을 작성하세요...">${escapeHtml(answer)}</textarea>
+      <div style="margin-top: 10px;">
+        <button type="button" class="reveal-answer-button">정답 보기</button>
+      </div>
+      <div class="question-solution hidden"></div>
     `;
 
     const textarea = card.querySelector("textarea");
@@ -220,8 +225,102 @@ function renderQuestions(quizData) {
       setStatus(`문제 ${question.number} 답안 자동 저장됨`);
     });
 
+    const revealButton = card.querySelector(".reveal-answer-button");
+    const solutionBox = card.querySelector(".question-solution");
+    revealButton.addEventListener("click", async () => {
+      const solution = await getQuestionSolution(currentQuizId, question.number);
+      if (!solution) {
+        solutionBox.classList.remove("hidden");
+        solutionBox.innerHTML = "<strong>정답 정보가 없습니다.</strong>";
+        setStatus(`문제 ${question.number} 정답 정보를 찾지 못했습니다.`);
+        return;
+      }
+
+      solutionBox.classList.remove("hidden");
+      solutionBox.innerHTML = `
+        <div><strong>정답</strong>: ${escapeHtml(solution.answer)}</div>
+        <div style="margin-top:6px;"><strong>설명</strong>: ${escapeHtml(solution.explanation)}</div>
+      `;
+      setStatus(`문제 ${question.number} 정답/설명 표시 완료`);
+    });
+
     questionsContainer.appendChild(card);
   });
+}
+
+async function getQuestionSolution(quizId, questionNumber) {
+  if (!gradingCache[quizId]) {
+    try {
+      const gradingText = await fetchMarkdownText(`./${quizId}/grading.md`, "채점 파일");
+      gradingCache[quizId] = parseGradingMarkdown(gradingText);
+    } catch (error) {
+      setStatus(`채점 파일 로드 실패: ${error.message}`);
+      gradingCache[quizId] = {};
+    }
+  }
+  return gradingCache[quizId][questionNumber] || null;
+}
+
+function parseGradingMarkdown(markdown) {
+  const result = {};
+  const lines = markdown.split("\n");
+
+  for (let i = 0; i < lines.length; i += 1) {
+    const headerMatch = lines[i].match(/^### 문제 (\d+)/);
+    if (!headerMatch) {
+      continue;
+    }
+
+    const questionNumber = Number(headerMatch[1]);
+    const block = [];
+    let cursor = i + 1;
+    while (cursor < lines.length && !lines[cursor].startsWith("### 문제 ")) {
+      block.push(lines[cursor]);
+      cursor += 1;
+    }
+
+    const answerLine = block.find((line) => line.startsWith("- **정답**:"));
+    let answer = answerLine ? answerLine.replace("- **정답**:", "").trim() : "정답 정보 없음";
+
+    if (answer === "완벽!") {
+      const myAnswerLine = block.find((line) => line.startsWith("- **네 답**:"));
+      if (myAnswerLine) {
+        answer = myAnswerLine.replace("- **네 답**:", "").trim();
+      }
+    }
+
+    let explanation = "";
+    const explanationIndex = block.findIndex((line) => line.startsWith("- **해설**:"));
+    if (explanationIndex >= 0) {
+      const explanationLines = [block[explanationIndex].replace("- **해설**:", "").trim()];
+      for (let j = explanationIndex + 1; j < block.length; j += 1) {
+        const line = block[j];
+        if (line.startsWith("- **")) {
+          break;
+        }
+        if (line.trim().length === 0) {
+          continue;
+        }
+        explanationLines.push(line.trim());
+      }
+      explanation = explanationLines.join(" ");
+    }
+
+    if (!explanation) {
+      const fallbackLine = block.find(
+        (line) =>
+          line.trim().length > 0 &&
+          !line.startsWith("- **네 답**:") &&
+          !line.startsWith("- **정답**:")
+      );
+      explanation = fallbackLine ? fallbackLine.replace(/^- /, "").trim() : "해설 정보 없음";
+    }
+
+    result[questionNumber] = { answer, explanation };
+    i = cursor - 1;
+  }
+
+  return result;
 }
 
 function buildAnswersMarkdown(quizData, quizId) {
