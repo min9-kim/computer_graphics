@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>컴퓨터그래픽스 퀴즈 풀이</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="top">
+        <h1>컴퓨터그래픽스 퀴즈 풀이</h1>
+        <p>퀴즈를 선택하고 답을 입력하면 브라우저에 자동 저장됩니다.</p>
+      </header>
+
+      <section class="controls">
+        <label for="quiz-select">퀴즈 선택</label>
+        <select id="quiz-select"></select>
+        <button id="copy-button" type="button">answers.md 형식으로 복사</button>
+        <button id="clear-button" type="button">현재 퀴즈 답안 초기화</button>
+      </section>
+
+      <section id="status" class="status" aria-live="polite"></section>
+      <section id="quiz-meta" class="quiz-meta"></section>
+      <section id="questions" class="questions"></section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
